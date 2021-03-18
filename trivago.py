@@ -1,14 +1,13 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn import cluster
-from sklearn import metrics
-from sklearn.cluster import KMeans
 import seaborn as sns
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler,MinMaxScaler
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+import matplotlib.pyplot as plt
 import os
+
 missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
 my_path = os.path.abspath(os.path.dirname(__file__))
 df_train=pd.read_csv(r''+my_path+'\\data\\train.csv', sep=',', nrows=1000,na_values=missing_values)
@@ -49,3 +48,21 @@ print('mean ', s.mean())
 num_bins = 5
 # plt.hist(s.max().values, num_bins, facecolor='blue', alpha=0.5)
 # plt.show()
+
+print(df_train.head(5))
+df_train =  StandardScaler().fit(df_train)
+print(df_train.head(5))
+
+# X = df_train.iloc[:, 0:4]
+# y = df_train.iloc[:, 4]
+
+
+
+# X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=.5)
+
+# knn = KNeighborsClassifier()
+# knn.fit(X_train,y_train)
+
+# y_predicted = knn.predict(X_test)
+
+# print(accuracy_score(y_predicted,y_test))
