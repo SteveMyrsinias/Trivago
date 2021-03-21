@@ -3,23 +3,118 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import mean_absolute_error, confusion_matrix, precision_recall_fscore_support, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, cross_val_score,KFold,validation_curve, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn import svm
+from sklearn import tree
 import matplotlib.pyplot as plt
 from seaborn import countplot
+import seaborn as sns
 import numpy as np
 import pandas as pd
 import os
 
+def printMetrics(y_test, y_pred, algoName):
+   print('\n')
+   print(algoName + ' Accuracy: ',           round(accuracy_score(y_test, y_pred), 2), '%.')
+   print(algoName + ' Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
+   print(algoName + ' Recall: ',             round(recall_score(y_test, y_pred), 2), '%.')
+   print(algoName + ' Precesion: ',          round(precision_score(y_test, y_pred), 2), '%.')
+   print(algoName + ' F-measure: ',          round(f1_score(y_test, y_pred), 2), '%.')
+
+def pltRocCurve(y_test, y_pred, algoName):
+   # ROC-AUC curve
+   # calculate the fpr and tpr for all thresholds of the classification
+   fpr, tpr, threshold = roc_curve(y_test, y_pred)
+   roc_auc = auc(fpr, tpr)
+
+   # method I: plt
+   plt.title('Receiver Operating Characteristic for ' + algoName)
+   plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+   plt.legend(loc = 'lower right')
+   plt.plot([0, 1], [0, 1],'r--')
+   plt.xlim([0, 1])
+   plt.ylim([0, 1])
+   plt.ylabel('True Positive Rate')
+   plt.xlabel('False Positive Rate')
+   plt.show()
+
+def correlationMatrix(inutDataFrame):
+   corrMatrix = inutDataFrame.corr()
+   sns.heatmap(corrMatrix, annot=True)
+   plt.show()
+
+def printMissingPercentageForEveryFeature(inutDataFrame):
+   for col in inutDataFrame.columns:
+      pct_missing = np.mean(inutDataFrame[col].isnull())
+      print('{} - {}%'.format(col, round(pct_missing*100)))
+
+def excractBestFeatures(X,y,bestFeaturesNum):
+   # apply SelectKBest class to extract top 10 best features
+   bestfeatures = SelectKBest(score_func=chi2, k=bestFeaturesNum)
+   fit = bestfeatures.fit(X,y)
+   dfscores = pd.DataFrame(fit.scores_)
+   dfcolumns = pd.DataFrame(X.columns)
+
+   # concat two dataframes for better visualization 
+   featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+   featureScores.columns = ['Specs','Score']  # naming the dataframe columns
+   print(featureScores.nlargest(bestFeaturesNum,'Score'))  # print 10 best features
+
+def excractFeatureImportance(X,y):
+   model = ExtraTreesClassifier()
+   model.fit(X,y)
+   #print(model.feature_importances_) # use inbuilt class feature_importances of tree based classifiers
+   # plot graph of feature importances for better visualization
+   feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+   feat_importances.nlargest(10).plot(kind='barh')
+   plt.title('Feature Importances ')
+   plt.show()
+
+def getModelsBestParameters(model, algoName):
+   print(algoName + ' Best Parameters : ', model.best_estimator_)
+
+def measureTradeOff(X,y,model):
+   y = np.array(y)
+   kf = KFold(n_splits=10)
+   list_training_error = []
+   list_testing_error = []
+   for train_index, test_index in kf.split(X):
+       X_train, X_test = X[train_index], X[test_index]
+       y_train, y_test = y[train_index], y[test_index]
+       model.fit(X_train, y_train)
+       y_train_data_pred = model.predict(X_train)
+       y_test_data_pred = model.predict(X_test)
+       fold_training_error = mean_absolute_error(y_train, y_train_data_pred) 
+       fold_testing_error = mean_absolute_error(y_test, y_test_data_pred)
+       list_training_error.append(fold_training_error)
+       list_testing_error.append(fold_testing_error)
+
+   plt.subplot(1,2,1)
+   plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_training_error).ravel(), 'o-')
+   plt.xlabel('Number of fold')
+   plt.ylabel('Training error')
+   plt.title('Training error across folds')
+   plt.tight_layout()
+   plt.subplot(1,2,2)
+   plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_testing_error).ravel(), 'o-')
+   plt.xlabel('Number of fold')
+   plt.ylabel('Testing error')
+   plt.title('Testing error across folds')
+   plt.tight_layout()
+   plt.show()
+
 missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
 my_path = os.path.abspath(os.path.dirname(__file__))
-generated_df=pd.read_csv(r''+my_path+'\\data\\export_dataframe.csv', sep=',', na_values=missing_values)
+generated_df=pd.read_csv(r''+my_path+'\\data\\export_dataframe.csv', nrows=10000, sep=',', na_values=missing_values)
 
 print(generated_df.shape) # (58529, 16)
 
-# Start - Check for imbalanced dataset
+#### Start - Check for imbalanced dataset ####
 print(generated_df.groupby(['target']).size()) # print the sum of every class,  0:4985, 1:53544
 
 countplot(data=generated_df,x=generated_df['target'])
@@ -50,17 +145,28 @@ plt.show()
 
 print("generated_df", generated_df.shape) # (58529, 16)
 print("normalized_df", normalized_df.shape)  # (9970, 16)
-# Stop - Check for imbalanced dataset
+#### Stop - Check for imbalanced dataset ####
 
+# Plot Correlation HeatMap
+correlationMatrix(normalized_df)
+
+# print percentage of null values per feature
+printMissingPercentageForEveryFeature(normalized_df)
+
+targetColumns = generated_df['target']
 y = normalized_df.iloc[:, -1].values # get the target column
 y = y.astype('int')
 normalized_df.drop('target', axis=1, inplace=True) # drop the target column from data base
 
+featureColumns = generated_df.columns
 # convert categorical variable into dummy
 normalized_df = pd.get_dummies(normalized_df, columns=['device'],   prefix=['device_Type_is']     )
 normalized_df = pd.get_dummies(normalized_df, columns=['city'],     prefix=['city_Type_is']       )
 normalized_df = pd.get_dummies(normalized_df, columns=['country'],  prefix=['country_Type_is']    )
 normalized_df = pd.get_dummies(normalized_df, columns=['platform'], prefix=['platform_Type_is']   )
+
+# apply SelectKBest class to extract top 10 best features
+excractFeatureImportance(normalized_df.iloc[:, :-1],y)
 
 # Scale Data
 scaled_features = normalized_df.copy()
@@ -70,40 +176,34 @@ X = std_scale.transform(columns.values)
 
 X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,random_state=109)
 
-# Create a Gaussian Classifier
+############################################################ Gaussian ############################################################################################
+
 nb_classifier = GaussianNB()
 params_NB = {'var_smoothing': np.logspace(0,-9, num=100)}
-gs_NB = GridSearchCV(estimator=nb_classifier, 
+gaussian = GridSearchCV(estimator=nb_classifier, 
                  param_grid=params_NB, 
                  cv=2,   # use any cross validation technique 
                  verbose=1, 
                  scoring='accuracy') 
 
 #gnb = GaussianNB()
-gs_NB.fit(X_train, y_train)
-y_pred = gs_NB.predict(X_test)
+gaussian.fit(X_train, y_train)
+y_pred = gaussian.predict(X_test)
 
-print('\n Gaussian Naive Bayes Accuracy: ',        accuracy_score(y_test, y_pred))
-print('Gaussian Naive Bayes Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
-print('Gaussian Naive Bayes Recall: ',             recall_score(y_test, y_pred))
-print('Gaussian Naive Bayes Precesion: ',          precision_score(y_test, y_pred))
-print('Gaussian Naive Bayes F-measure: ',          f1_score(y_test, y_pred))
+getModelsBestParameters(gaussian, 'Gaussian Naive Bayes')
+printMetrics(y_test, y_pred, 'Gaussian Naive Bayes')
+pltRocCurve(y_test, y_pred, 'Gaussian Naive Bayes')
+measureTradeOff(X,y,gaussian)
 
-# ROC-AUC curve
-# calculate the fpr and tpr for all thresholds of the classification
-fpr, tpr, threshold = roc_curve(y_test, y_pred)
-roc_auc = auc(fpr, tpr)
+############################################################ Logistic Regression ############################################################################################
 
-# method I: plt
-plt.title('Receiver Operating Characteristic')
-plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-plt.legend(loc = 'lower right')
-plt.plot([0, 1], [0, 1],'r--')
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.ylabel('True Positive Rate')
-plt.xlabel('False Positive Rate')
-plt.show()
+logreg = LogisticRegression()
+logreg.fit(X_train, y_train)
+y_pred = logreg.predict(X_test)
+
+getModelsBestParameters(logreg, 'Logistic Regression')
+printMetrics(y_test, y_pred, 'Logistic Regression')
+pltRocCurve(y_test, y_pred, 'Logistic Regressions')
 
 ############################################################ Decision Tree ############################################################################################
 
@@ -113,94 +213,57 @@ param_grid = {
     'max_depth': np.arange(3, 6)
 }
 
-clf = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=2)
-clf = clf.fit(X_train,y_train)
-y_pred = clf.predict(X_test)
+decisionTree = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=2)
+decisionTree.fit(X_train,y_train)
+y_pred = decisionTree.predict(X_test)
 
-print('\n Decision Tree Accuracy: ',         accuracy_score(y_test, y_pred))
-print('Decision Tree Confusion Matrix: \n',  confusion_matrix(y_test, y_pred))
-print('Decision Tree Recall: ',              recall_score(y_test, y_pred))
-print('Decision Tree Precesion: ',           precision_score(y_test, y_pred))
-print('Decision Tree F-measure: ',           f1_score(y_test, y_pred))
-
-# ROC-AUC curve
-# calculate the fpr and tpr for all thresholds of the classification
-fpr, tpr, threshold = roc_curve(y_test, y_pred)
-roc_auc = auc(fpr, tpr)
-
-# method I: plt
-plt.title('Receiver Operating Characteristic')
-plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-plt.legend(loc = 'lower right')
-plt.plot([0, 1], [0, 1],'r--')
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.ylabel('True Positive Rate')
-plt.xlabel('False Positive Rate')
-plt.show()
+getModelsBestParameters(decisionTree, 'Decision Tree')
+printMetrics(y_test, y_pred, 'Decision Tree')
+pltRocCurve(y_test, y_pred, 'Decision Tree')
 
 ############################################################ KNeighbors #################################################################################################
 
-classifier = KNeighborsClassifier(n_neighbors=11, p=2, metric='euclidean')
-classifier.fit(X_train,y_train)
-y_pred = classifier.predict(X_test)
+kneighbors = KNeighborsClassifier(n_neighbors=11, p=2, metric='euclidean')
+kneighbors.fit(X_train,y_train)
+y_pred = kneighbors.predict(X_test)
 
-print('\n KNeighbors Classifier Accuracy: ',          accuracy_score(y_test, y_pred))
-print('KNeighbors Classifier Confusion Matrix: \n',   confusion_matrix(y_test, y_pred))
-print('KNeighbors Classifier Recall: ',               recall_score(y_test, y_pred))
-print('KNeighbors Classifier Precesion: ',            precision_score(y_test, y_pred))
-print('KNeighbors Classifier F-measure: ',            f1_score(y_test, y_pred))
-
-# ROC-AUC curve
-# calculate the fpr and tpr for all thresholds of the classification
-fpr, tpr, threshold = roc_curve(y_test, y_pred)
-roc_auc = auc(fpr, tpr)
-
-# method I: plt
-plt.title('Receiver Operating Characteristic')
-plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-plt.legend(loc = 'lower right')
-plt.plot([0, 1], [0, 1],'r--')
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.ylabel('True Positive Rate')
-plt.xlabel('False Positive Rate')
-plt.show()
+getModelsBestParameters(kneighbors, 'KNeighbors Classifier')
+printMetrics(y_test, y_pred, 'KNeighbors Classifier')
+pltRocCurve(y_test, y_pred, 'KNeighbors Classifier')
 
 ############################################################ Random Forest #############################################################################################
 
 RSEED = 50
-model = RandomForestClassifier(n_estimators=100, 
+rf = RandomForestClassifier(n_estimators=100, 
                                random_state=RSEED, 
                                max_features = 'sqrt',
                                n_jobs=-1, verbose = 1)
 
-model.fit(X_train,y_train)
-y_pred = classifier.predict(X_test)
+rf.fit(X_train,y_train)
+y_pred = rf.predict(X_test)
 
-print(' \n Random Forest Classifier Accuracy: ',         accuracy_score(y_test, y_pred))
-print('Random Forest Classifier Confusion Matrix: \n',   confusion_matrix(y_test, y_pred))
-print('Random Forest Classifier Recall: ',               recall_score(y_test, y_pred))
-print('Random Forest Classifier Precesion: ',            precision_score(y_test, y_pred))
-print('Random Forest Classifier F-measure: ',            f1_score(y_test, y_pred))
+###### Visualize all the trees ######
+# fn=featureColumns
+# cn=targetColumns
+# fig, axes = plt.subplots(nrows = 1,ncols = 5,figsize = (10,2), dpi=900)
+# for index in range(0, 5):
+#     tree.plot_tree(rf.estimators_[index],
+#                    feature_names = fn, 
+#                    class_names=cn,
+#                    filled = True,
+#                    ax = axes[index])
 
-# ROC-AUC curve
-# calculate the fpr and tpr for all thresholds of the classification
-fpr, tpr, threshold = roc_curve(y_test, y_pred)
-roc_auc = auc(fpr, tpr)
+#     axes[index].set_title('Estimator: ' + str(index), fontsize = 11)
+# fig.savefig('rf_5trees.png')
+###### Visualize all the trees ######
 
-# method I: plt
-plt.title('Receiver Operating Characteristic')
-plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-plt.legend(loc = 'lower right')
-plt.plot([0, 1], [0, 1],'r--')
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.ylabel('True Positive Rate')
-plt.xlabel('False Positive Rate')
-plt.show()
+print(rf.estimators_) # all the individual trees
 
-############################################################ Support Vecto Machine #####################################################################################
+getModelsBestParameters(rf, 'Random Forest')
+printMetrics(y_test, y_pred, 'Random Forest')
+pltRocCurve(y_test, y_pred, 'Random Forest')
+
+############################################################ Support Vector Machine #####################################################################################
 
 parameters = {
     'kernel':('linear', 'rbf'), 
@@ -214,27 +277,9 @@ clf = GridSearchCV(svm.SVC(), parameters)
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 
-print('\n Support Vecto Machine SVM Classifier Accuracy:        ',   accuracy_score(y_test, y_pred))
-print('Support Vecto Machine SVM Classifier Confusion Matrix: \n',   confusion_matrix(y_test, y_pred))
-print('Support Vecto Machine SVM Classifier Recall:             ',   recall_score(y_test, y_pred))
-print('Support Vecto Machine SVM Classifier Precesion:          ',   precision_score(y_test, y_pred))
-print('Support Vecto Machine SVM Classifier F-measure:          ',   f1_score(y_test, y_pred))
-
-# ROC-AUC curve
-# calculate the fpr and tpr for all thresholds of the classification
-fpr, tpr, threshold = roc_curve(y_test, y_pred)
-roc_auc = auc(fpr, tpr)
-
-# method I: plt
-plt.title('Receiver Operating Characteristic')
-plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-plt.legend(loc = 'lower right')
-plt.plot([0, 1], [0, 1],'r--')
-plt.xlim([0, 1])
-plt.ylim([0, 1])
-plt.ylabel('True Positive Rate')
-plt.xlabel('False Positive Rate')
-plt.show()
+getModelsBestParameters(clf, 'Support Vector Machine SVM')
+printMetrics(y_test, y_pred, 'Support Vector Machine SVM')
+pltRocCurve(y_test, y_pred, 'Support Vector Machine SVM')
 
 ########################################################################## MLPClassifier #############################################################################
 
@@ -250,6 +295,7 @@ y_test_pred_ANN=clfANN.predict(X_test)
 
 confMatrixTestANN=confusion_matrix(y_test, y_test_pred_ANN, labels=None)
 
+getModelsBestParameters(clfANN, 'MLPClassifier')
 print ('Conf matrix Neural Net')
 print (confMatrixTestANN)
 

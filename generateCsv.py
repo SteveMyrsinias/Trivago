@@ -1,26 +1,22 @@
+import os
+import statistics 
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
-from sklearn import metrics
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
-import os
 
-# ToDo: add current_filters, impressions, prices,
-
-missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
-my_path = os.path.abspath(os.path.dirname(__file__))
-df_train=pd.read_csv(r''+my_path+'\\data\\train.csv', sep=',', na_values=missing_values)
-print(df_train.shape) #(1048575, 12)
-groupedByUserId  = df_train.groupby(['user_id']) # group rows per user_id
-# colums for the data frame that we generate
-columns = ['durationOfSession', 'steps', 'device', 'city', 'country', 'platform','interaction item image','search for poi','filter selection', 'interaction item info', 'search for destination', 'interaction item rating', 'change of sort order', 'interaction item deals', 'search for item', 'target']
+# colums for the dataset that we will generate
+columns = ['durationOfSession', 'steps', 'device', 'city', 'country', 'platform', 'current_filters', 'impressions', 'priceMean', 'hotel Facilities','interaction item image','search for poi','filter selection', 'interaction item info', 'search for destination', 'interaction item rating', 'change of sort order', 'interaction item deals', 'search for item', 'target']
 generated_df = pd.DataFrame(columns=columns)
 
-# ToDo: tackle the case of 2 click-out per
+missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
+my_path = os.path.abspath(os.path.dirname(__file__)) # get the current path
+df_train=pd.read_csv(r''+my_path+'\\data\\train.csv', sep=',', na_values=missing_values) #, nrows=100000
+itemMetaData=pd.read_csv(r''+my_path+'\\data\\item_metadata.csv', sep=',', na_values=missing_values)
+
+groupedByUserId  = df_train.groupby(['user_id']) # group rows per user_id
+
 for index,group in groupedByUserId:
    df = group.iloc[[0, -1]] # get the first and the last column of the group
    startTimeStamp = dt.fromtimestamp(df.iloc[0, 2]) # get the timestamp when the user starts the session, and convert it into datetime 
@@ -37,9 +33,9 @@ for index,group in groupedByUserId:
       target=1
    
    # initialize multiple variables
-   interactionItemImage=searchForPoi=filterSelection=interactionItemInfo=searchForDestination=interactionItemRating=changeOfSortOrder=interactionItemDeals=searchForItem=0
+   hotelFacilities=impressions=prices=currentFilters=interactionItemImage=searchForPoi=filterSelection=interactionItemInfo=searchForDestination=interactionItemRating=changeOfSortOrder=interactionItemDeals=searchForItem=0
 
-   actionType = group['action_type'].value_counts()
+   actionType = group['action_type'].value_counts() # get the action_type per session and count every action of a person
    for i, v in actionType.items():
       if i == 'interaction item image':
          interactionItemImage = v
@@ -59,11 +55,30 @@ for index,group in groupedByUserId:
          interactionItemDeals = v
       if i == 'search for item':
          searchForItem = v
-      #print('index: ', i, 'value: ', v)
    
+   currentFiltersGroup = group['current_filters'].value_counts() # get the sum of all the current_filter of a session
+   for i, v in currentFiltersGroup.items():
+      filters=i.split('|')
+      currentFilters=len(filters)
+
+   pricesGroup = group['prices'].value_counts() # get the median of all the prices of a session
+   for i, v in pricesGroup.items():
+      filterPrices=i.split('|')
+      prices=statistics.median(map(int, filterPrices))
+
+   impressionsGroup = group['impressions'].value_counts() # get the sum of all the impressions of a session
+   for i, v in impressionsGroup.items():
+      filters=i.split('|')
+      for t in filters:
+         t = int(t)
+         hotelFacilityGroup = itemMetaData.loc[itemMetaData['item_id'] == t].value_counts() # get the sum of all hotel's facility fromt the metadata csv
+         for j, k in hotelFacilityGroup.items():
+            facilities= j[1].split('|')
+            hotelFacilities += len(facilities)
+      impressions=len(filters)
+
    # add values to the generated data frame
-   generated_df.loc[generated_df.shape[0]] = [durationOfSession,steps,device,city,country,platform,interactionItemImage,searchForPoi, filterSelection, interactionItemInfo, searchForDestination, interactionItemRating, changeOfSortOrder, interactionItemDeals, searchForItem,target]
+   generated_df.loc[generated_df.shape[0]] = [durationOfSession,steps,device,city,country,platform,currentFilters,impressions,prices,hotelFacilities,interactionItemImage,searchForPoi, filterSelection, interactionItemInfo, searchForDestination, interactionItemRating, changeOfSortOrder, interactionItemDeals, searchForItem,target]
 
 # create a csv file 
 generated_df.to_csv (r''+my_path+'\\data\\export_dataframe.csv', index = False, header=True)
-#print(generated_df)
