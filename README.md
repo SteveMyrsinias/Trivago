@@ -6,39 +6,41 @@ In order to predict the target value, we should transform the original data as f
 
 We group the rows from the original dataset by user id, on top of that we compute:
 
-1.  The total duration of the user by getting the fist and the last timestamps
-2.  The steps that the user proceeded in order to click-out 
-3.  The device that the user used
-4.  The city name of the search context
-5.  The country platform that was used for the search, e.g. trivago.de (DE) or trivago.com (US)
-6.  The platform of the search context
-7.  The actions that the user proceeded before click-out
-8.  The sum of the filters that user user within a session
-9.  The median of the hotel's prices
-10. The sum of the impression when the user click-out
-11. The sum of all the facilities that hotels are offering 
+1.  The total duration of the user's session by subtract the last timestamp from the fist timestamp.
+2.  The total steps that the user proceeded. 
+3.  The device that the user used for the search.
+4.  The current city of the search context.
+5.  The current country of the search context.
+6.  The country platform that was used for the search, e.g. trivago.de (DE) or trivago.com (US)
+7.  The total count of filters tha user proceed in a session.
+8.  The sum of the impression was shown when the user click-out.
+9.  The median of the hotel's prices that displayed in user.
+10. The sum of all the facilities that hotels are offering .
+11. Create a column for each type of action and count the total action of them.
+12. Create a target column to idicate if the user click out or not.
 
 The generated csv from generateCsv.py (see on data folder export_dataframe.csv) consist of the following features:
 
 1. durationOfSession
 2. steps
 3. device
-3. city
-3. country
-4. platform
-4. current_filters
-5. impressions
-5. hotel Facilities
-6. interaction item image
-7. search for poi
-8. filter selection
-9. interaction item info
-10. search for destination
-11. interaction item rating
-12. change of sort order
-13. interaction item deals
-14. search for item
-15. target
+4. city
+5. country
+6. platform
+7. current_filters
+8. impressions
+9. priceMean
+10. hotel Facilities
+11. interaction item image
+12. search for poi
+13. filter selection
+14. interaction item info
+15. search for destination
+16. interaction item rating
+17. change of sort order
+18. interaction item deals
+19. search for item
+20. target
 
 Gradient Descent
 Correlation matrix
@@ -49,25 +51,31 @@ features.describe()
 feature_importances_
 #TODO:  logistic regression, random forest regressor
 
-## Data Description
+### Data Description
+Initial dataset: (58529, 20)
+Print missing values:  0
+Generated dataset: (58529, 20)
 
-## Data Preprocessing
+### Data Preprocessing
 
-### Detect Imbalanced Classes
+
+#### Detect Imbalanced Classes
 
 In generated dataset the target values are 4985 rows for class:0 (not clickout) and 53544 rows for class:1 (clickout).
 
-![alt text](https://raw.githubusercontent.com/SteveMyrsinias/Trivago/main/images/generatedCsvTargetDist.png?token=ACYAUFLN7FLEYZUPBVRJNFDAK4A7A)
+![](images/initialDistOfTargetClass.png)
 
 As we can obser the dataset is imbalance, therefor we should delete some values from the majority class in order to balanche the data set
 
-![alt text](https://raw.githubusercontent.com/SteveMyrsinias/Trivago/main/images/generatedCsvTargetDist1.png?token=ACYAUFNWWOLRFAHHWZIVJTLAK4A7G)
+![](images/generatedDistOfTargetClass.png)
 
 The final balanche dataset consist of 9970 observers.
 
-TODO Corellation Matrix
+![](images/correlationHeatMap.png)
 
 ### Detect Missing Data
+
+### Detect Outlier
 
 ### One Hot encoding
 In order to convert the categorical variables as binary vectors we use the one hot encoding.
@@ -75,14 +83,6 @@ TODO: add the categorical values
 
 ### Splitting the data-set into Training and Test Set
 This ensures that the random numbers are generated in the same order we use the random_state.
-
-### Feature selection
-https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e
-
-#### Univariate Selection
-Statistical tests can be used to select those features that have the strongest relationship with the output variable.
-
-The scikit-learn library provides the SelectKBest class that can be used with a suite of different statistical tests to select a specific number of features.
 
 #### Feature Importance
 We use SelectKBest in order to select those features that they have the strongest relationship with the output variable.
@@ -93,91 +93,95 @@ We use SelectKBest in order to select those features that they have the stronges
 
 ### 1.Gaussian Mixture
 
-| Evaluation    | -           
+![](images/gaussianNaiveBayesConfusionMatrix.png)
+![](images/GaussianNaiveBayesRocCurve.png)
+![](images/gaussianNaiveBayesTradeOff1.png)
+![](images/gaussianNaiveBayesTradeOff2.png)
+
+| Evaluation    | Gaussian Mixture          
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 0.98 %
+| Recall        | 0.98 %     
+| Precesion     | 0.99 %     
+| F-measure     | 0.98 %      
 
 ### 2.Logistic Regression
 
-| Evaluation    | -           
+![](images/logisticRegressionConfusionMatrix.png)
+![](images/logisticRegressionRocCurve.png)
+![](images/logisticRegressionTradeOff1.png)
+![](images/logisticRegressionTradeOff2.png)
+
+| Evaluation    | Logistic Regression           
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 1.0 % 
+| Recall        | 1.0 %     
+| Precesion     | 1.0 %     
+| F-measure     | 1.0 %      
 
 ### 3.Decision Tree
 
-| Evaluation    | -           
+![](images/decisionTreeConfusionMatrix.png)
+![](images/decisionTreeRocCurve.png)
+![](images/decesionTreeTradeOff1.png)
+![](images/decesionTreeTradeOff2.png)
+
+| Evaluation    | Decision Tree           
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 0.99 % 
+| Recall        | 0.99 %     
+| Precesion     | 1.0 %     
+| F-measure     | 0.99 %      
 
 ### 5.KNeighbors
 
-| Evaluation    | -           
+![](images/kneighborsConfusionMatrix.png)
+![](images/kneighborsRocCurve.png)
+![](images/kneighborsTradeOff1.png)
+![](images/kneighborsTradeOff2.png)
+
+| Evaluation    | KNeighbors           
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 0.99 % 
+| Recall        | 0.99 %     
+| Precesion     | 1.0 %     
+| F-measure     | 0.99 %      
 
 ### 5.Random Forest
 
-| Evaluation    | -           
+![](images/randomForestConfusionMatrix.png)
+![](images/randomForestRocCurve.png)
+![](images/randomForestTradeOff1.png)
+![](images/randomForestTradeOff2.png)
+
+| Evaluation    | Random Forest          
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 0.99 % 
+| Recall        | 0.99 %     
+| Precesion     | 1.0 %     
+| F-measure     | 0.99 %      
 
 ### 6.Support Vector Machine
 
-| Evaluation    | -           
+![](images/supportVectorMachineConfusionMatrix.png)
+![](images/supportVectorMachineRocCurve.png)
+
+
+| Evaluation    | Support Vector Machine          
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
-
-Confusion Matrix:
-
-TODO: ROC image 
+| Accuracy      | 1.0 % 
+| Recall        | 1.0 %     
+| Precesion     | 1.0 %     
+| F-measure     | 1.0 %      
 
 ### 7.MLPClassifier
 
-| Evaluation    | -           
+| Evaluation    | MLPClassifier          
 | ------------- |:-------------:
 | Accuracy      | - 
 | Recall        | -     
 | Precesion     | -     
 | F-measure     | -      
 
-Confusion Matrix:
-
-TODO: ROC image 
+### Feature Work 
+Analysis mote the current_filters column

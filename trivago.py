@@ -1,4 +1,6 @@
+########################################################################## START ##########################################################################
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.decomposition import PCA
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import mean_absolute_error, confusion_matrix, precision_recall_fscore_support, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
@@ -7,117 +9,34 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, cross_val_score,KFold,validation_curve, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn import svm
-from sklearn import tree
+from sklearn.pipeline import Pipeline
+from sklearn import svm,tree
 import matplotlib.pyplot as plt
-from seaborn import countplot
 import seaborn as sns
 import numpy as np
 import pandas as pd
+from functions import *
+import time
 import os
+import warnings
+warnings.filterwarnings("ignore")
 
-def printMetrics(y_test, y_pred, algoName):
-   print('\n')
-   print(algoName + ' Accuracy: ',           round(accuracy_score(y_test, y_pred), 2), '%.')
-   print(algoName + ' Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
-   print(algoName + ' Recall: ',             round(recall_score(y_test, y_pred), 2), '%.')
-   print(algoName + ' Precesion: ',          round(precision_score(y_test, y_pred), 2), '%.')
-   print(algoName + ' F-measure: ',          round(f1_score(y_test, y_pred), 2), '%.')
-
-def pltRocCurve(y_test, y_pred, algoName):
-   # ROC-AUC curve
-   # calculate the fpr and tpr for all thresholds of the classification
-   fpr, tpr, threshold = roc_curve(y_test, y_pred)
-   roc_auc = auc(fpr, tpr)
-
-   # method I: plt
-   plt.title('Receiver Operating Characteristic for ' + algoName)
-   plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
-   plt.legend(loc = 'lower right')
-   plt.plot([0, 1], [0, 1],'r--')
-   plt.xlim([0, 1])
-   plt.ylim([0, 1])
-   plt.ylabel('True Positive Rate')
-   plt.xlabel('False Positive Rate')
-   plt.show()
-
-def correlationMatrix(inutDataFrame):
-   corrMatrix = inutDataFrame.corr()
-   sns.heatmap(corrMatrix, annot=True)
-   plt.show()
-
-def printMissingPercentageForEveryFeature(inutDataFrame):
-   for col in inutDataFrame.columns:
-      pct_missing = np.mean(inutDataFrame[col].isnull())
-      print('{} - {}%'.format(col, round(pct_missing*100)))
-
-def excractBestFeatures(X,y,bestFeaturesNum):
-   # apply SelectKBest class to extract top 10 best features
-   bestfeatures = SelectKBest(score_func=chi2, k=bestFeaturesNum)
-   fit = bestfeatures.fit(X,y)
-   dfscores = pd.DataFrame(fit.scores_)
-   dfcolumns = pd.DataFrame(X.columns)
-
-   # concat two dataframes for better visualization 
-   featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-   featureScores.columns = ['Specs','Score']  # naming the dataframe columns
-   print(featureScores.nlargest(bestFeaturesNum,'Score'))  # print 10 best features
-
-def excractFeatureImportance(X,y):
-   model = ExtraTreesClassifier()
-   model.fit(X,y)
-   #print(model.feature_importances_) # use inbuilt class feature_importances of tree based classifiers
-   # plot graph of feature importances for better visualization
-   feat_importances = pd.Series(model.feature_importances_, index=X.columns)
-   feat_importances.nlargest(10).plot(kind='barh')
-   plt.title('Feature Importances ')
-   plt.show()
-
-def getModelsBestParameters(model, algoName):
-   print(algoName + ' Best Parameters : ', model.best_estimator_)
-
-def measureTradeOff(X,y,model):
-   y = np.array(y)
-   kf = KFold(n_splits=10)
-   list_training_error = []
-   list_testing_error = []
-   for train_index, test_index in kf.split(X):
-       X_train, X_test = X[train_index], X[test_index]
-       y_train, y_test = y[train_index], y[test_index]
-       model.fit(X_train, y_train)
-       y_train_data_pred = model.predict(X_train)
-       y_test_data_pred = model.predict(X_test)
-       fold_training_error = mean_absolute_error(y_train, y_train_data_pred) 
-       fold_testing_error = mean_absolute_error(y_test, y_test_data_pred)
-       list_training_error.append(fold_training_error)
-       list_testing_error.append(fold_testing_error)
-
-   plt.subplot(1,2,1)
-   plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_training_error).ravel(), 'o-')
-   plt.xlabel('Number of fold')
-   plt.ylabel('Training error')
-   plt.title('Training error across folds')
-   plt.tight_layout()
-   plt.subplot(1,2,2)
-   plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_testing_error).ravel(), 'o-')
-   plt.xlabel('Number of fold')
-   plt.ylabel('Testing error')
-   plt.title('Testing error across folds')
-   plt.tight_layout()
-   plt.show()
-
+elapsed_time = {"Gaussian Naive Bayes": [],"Logistic Regression": [] ,"KNeighbors": [],"Random Forest": [],"Decision Tree": [],"Support Vector Machine": [] ,"MLPClassifier": []} # Copute the computational time of every algorith
 missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
 my_path = os.path.abspath(os.path.dirname(__file__))
-generated_df=pd.read_csv(r''+my_path+'\\data\\export_dataframe.csv', nrows=10000, sep=',', na_values=missing_values)
+generated_df=pd.read_csv(r''+my_path+'\\data\\export_dataframe.csv',  sep=',', na_values=missing_values)
 
-print(generated_df.shape) # (58529, 16)
+print('initial shape: ',generated_df.shape) # (58529, 16)
+
+# Print missing values
+print('Print missing values: ', generated_df.isnull().values.sum())
 
 #### Start - Check for imbalanced dataset ####
 print(generated_df.groupby(['target']).size()) # print the sum of every class,  0:4985, 1:53544
 
-countplot(data=generated_df,x=generated_df['target'])
+sns.countplot(data=generated_df,x=generated_df['target'])
 plt.title('Display the distribution of taget class')
 plt.show()
 
@@ -139,7 +58,7 @@ non_fraud_df = shuffled_df.loc[shuffled_df['target'] == 1].sample(n=4985,random_
 normalized_df = pd.concat([fraud_df, non_fraud_df])
 
 # plot the dataset after the undersampling
-countplot(data=normalized_df,x=normalized_df['target'])
+sns.countplot(data=normalized_df,x=normalized_df['target'])
 plt.title('Display the distribution of taget class')
 plt.show()
 
@@ -147,11 +66,12 @@ print("generated_df", generated_df.shape) # (58529, 16)
 print("normalized_df", normalized_df.shape)  # (9970, 16)
 #### Stop - Check for imbalanced dataset ####
 
+# Plot boxplot
+displayBoxPlots(normalized_df, ['steps','current_filters','impressions','priceMean'])
+displayUniqueBoxPlot(normalized_df, ['durationOfSession','hotel Facilities'])
+
 # Plot Correlation HeatMap
 correlationMatrix(normalized_df)
-
-# print percentage of null values per feature
-printMissingPercentageForEveryFeature(normalized_df)
 
 targetColumns = generated_df['target']
 y = normalized_df.iloc[:, -1].values # get the target column
@@ -159,181 +79,210 @@ y = y.astype('int')
 normalized_df.drop('target', axis=1, inplace=True) # drop the target column from data base
 
 featureColumns = generated_df.columns
-# convert categorical variable into dummy
+# Convert categorical variable into dummy
 normalized_df = pd.get_dummies(normalized_df, columns=['device'],   prefix=['device_Type_is']     )
 normalized_df = pd.get_dummies(normalized_df, columns=['city'],     prefix=['city_Type_is']       )
 normalized_df = pd.get_dummies(normalized_df, columns=['country'],  prefix=['country_Type_is']    )
 normalized_df = pd.get_dummies(normalized_df, columns=['platform'], prefix=['platform_Type_is']   )
 
+print('After Converting categorical variable into dummy/indicator variables: ', normalized_df.shape) 
+
 # apply SelectKBest class to extract top 10 best features
 excractFeatureImportance(normalized_df.iloc[:, :-1],y)
 
-# Scale Data
-scaled_features = normalized_df.copy()
-columns = scaled_features[normalized_df.columns]
-std_scale = StandardScaler().fit(columns.values)
-X = std_scale.transform(columns.values)
+# Drop these feature 
+normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='country_Type_is')))]
+normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='city_Type_is')))]
+normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='platform_Type_is')))]
 
-X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,random_state=109)
+print('After deleting columns : ', normalized_df.shape) 
 
-############################################################ Gaussian ############################################################################################
+X_train, X_test, y_train, y_test = train_test_split(normalized_df.values,y,test_size=0.3,random_state=109)
 
-nb_classifier = GaussianNB()
-params_NB = {'var_smoothing': np.logspace(0,-9, num=100)}
-gaussian = GridSearchCV(estimator=nb_classifier, 
-                 param_grid=params_NB, 
-                 cv=2,   # use any cross validation technique 
-                 verbose=1, 
-                 scoring='accuracy') 
+############################################################ Scale Data ############################################################################################
 
-#gnb = GaussianNB()
+scaler = StandardScaler()
+scaler.fit(X_train) # Fit on training set only.
+X_train = scaler.transform(X_train) # Apply transform to both the training set and the test set.
+X_test = scaler.transform(X_test)
+
+########################################################################## PCA ##########################################################################
+
+pca = PCA(.90)
+pca.fit(X_train)
+X_train = pca.transform(X_train)
+X_test = pca.transform(X_test)
+
+############################################################ Gaussian Naive Bayes ############################################################################################
+modelName = 'Gaussian Naive Bayes'
+
+# Grid Search
+# param_grid = {'var_smoothing': np.logspace(0,-9, num=100)}
+# gaussian = GridSearchCV(estimator=GaussianNB(), param_grid=param_grid, cv=5,verbose=1, scoring='accuracy') 
+# getModelsBestParameters(gaussian, modelName) # GaussianNB(var_smoothing=0.01)
+
+# Create Model
+start_gaussian = time.time()
+gaussian = GaussianNB(var_smoothing=0.01)
 gaussian.fit(X_train, y_train)
 y_pred = gaussian.predict(X_test)
+end_gaussian = time.time()
 
-getModelsBestParameters(gaussian, 'Gaussian Naive Bayes')
-printMetrics(y_test, y_pred, 'Gaussian Naive Bayes')
-pltRocCurve(y_test, y_pred, 'Gaussian Naive Bayes')
-measureTradeOff(X,y,gaussian)
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOffAlterNative(normalized_df.values,y,gaussian,10,modelName)
+measureTradeOff(normalized_df.values,y,gaussian,10,modelName)
 
 ############################################################ Logistic Regression ############################################################################################
+modelName = 'Logistic Regression'
 
-logreg = LogisticRegression()
+start_logisticRegression = time.time()
+
+# Grid Search
+# clf = LogisticRegression()
+# param_grid = {'C': [0.01, 0.1, 1, 2, 10, 100], 'penalty': ['l1', 'l2']}
+# logreg = GridSearchCV(clf, param_grid = param_grid, cv = 5, verbose=True, n_jobs=-1)
+# getModelsBestParameters(logreg, 'Logistic Regression') # LogisticRegression(C=100)
+
+# Create Model
+logreg = LogisticRegression(C=100)
 logreg.fit(X_train, y_train)
 y_pred = logreg.predict(X_test)
+end_logisticRegression = time.time()
 
-getModelsBestParameters(logreg, 'Logistic Regression')
-printMetrics(y_test, y_pred, 'Logistic Regression')
-pltRocCurve(y_test, y_pred, 'Logistic Regressions')
+# predict_proba
+# https://stackoverflow.com/questions/61184906/difference-between-predict-vs-predict-proba-in-scikit-learn
+
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOffAlterNative(normalized_df.values,y,logreg,10,modelName)
+measureTradeOff(normalized_df.values,y,logreg,10,modelName)
 
 ############################################################ Decision Tree ############################################################################################
+modelName = 'Decision Tree'
 
-param_grid = { 
-    'max_leaf_nodes': list(range(2, 20)), 
-    'min_samples_split': [2, 3],
-    'max_depth': np.arange(3, 6)
-}
+# Grid Search
+# param_grid = { 'max_leaf_nodes': list(range(2, 20)), 'min_samples_split': [2, 3],'max_depth': np.arange(3, 6)} #prone to overfitting
+# decisionTree = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=5)
+# getModelsBestParameters(decisionTree, 'Decision Tree') # DecisionTreeClassifier(max_depth=5, max_leaf_nodes=18, min_samples_split=3)
 
-decisionTree = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=2)
+# Create Model
+start_decisionTree = time.time()
+decisionTree = DecisionTreeClassifier(max_depth=5, max_leaf_nodes=18, min_samples_split=3)
 decisionTree.fit(X_train,y_train)
 y_pred = decisionTree.predict(X_test)
+end_decisionTree = time.time()
 
-getModelsBestParameters(decisionTree, 'Decision Tree')
-printMetrics(y_test, y_pred, 'Decision Tree')
-pltRocCurve(y_test, y_pred, 'Decision Tree')
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOffAlterNative(normalized_df.values,y,decisionTree,10,modelName)
+measureTradeOff(normalized_df.values,y,decisionTree,10,modelName)
 
-############################################################ KNeighbors #################################################################################################
+############################################################ KNeighbors ######################################################################################
+modelName = 'KNeighbors'
 
-kneighbors = KNeighborsClassifier(n_neighbors=11, p=2, metric='euclidean')
+# Grid Search
+# grid_params = {'n_neighbors': [3,5,11,19],'weights': ['uniform','distance'],'metric': ['euclidean', 'manhattan']}
+# kneighbors = GridSearchCV(KNeighborsClassifier(), grid_params, verbose=1, cv=5, n_jobs=1)
+# getModelsBestParameters(kneighbors, 'KNeighbors Classifier')
+
+# Create Model
+start_KNeighbors = time.time()
+kneighbors = KNeighborsClassifier(metric='euclidean', weights='distance')
 kneighbors.fit(X_train,y_train)
 y_pred = kneighbors.predict(X_test)
+end_KNeighbors = time.time()
 
-getModelsBestParameters(kneighbors, 'KNeighbors Classifier')
-printMetrics(y_test, y_pred, 'KNeighbors Classifier')
-pltRocCurve(y_test, y_pred, 'KNeighbors Classifier')
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOffAlterNative(normalized_df.values,y,kneighbors,10,modelName)
+measureTradeOff(normalized_df.values,y,kneighbors,10,modelName)
 
-############################################################ Random Forest #############################################################################################
+############################################################ Random Forest #################################################################################
+modelName = 'Random Forest'
 
-RSEED = 50
-rf = RandomForestClassifier(n_estimators=100, 
-                               random_state=RSEED, 
-                               max_features = 'sqrt',
-                               n_jobs=-1, verbose = 1)
+# Grid Search
+# param_grid = { 'n_estimators': [200, 700],'max_features': ['auto', 'sqrt', 'log2']}
+# rf = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5)
+# getModelsBestParameters(rf, 'Random Forest')
 
+# Create Model
+start_RandomForest = time.time()
+rf = RandomForestClassifier(max_features='log2', n_estimators=200, n_jobs=-1, oob_score=True)
 rf.fit(X_train,y_train)
 y_pred = rf.predict(X_test)
+end_RandomForest = time.time()
 
-###### Visualize all the trees ######
-# fn=featureColumns
-# cn=targetColumns
-# fig, axes = plt.subplots(nrows = 1,ncols = 5,figsize = (10,2), dpi=900)
-# for index in range(0, 5):
-#     tree.plot_tree(rf.estimators_[index],
-#                    feature_names = fn, 
-#                    class_names=cn,
-#                    filled = True,
-#                    ax = axes[index])
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOffAlterNative(normalized_df.values,y,rf,10,modelName)
+measureTradeOff(normalized_df.values,y,rf,10,modelName)
 
-#     axes[index].set_title('Estimator: ' + str(index), fontsize = 11)
-# fig.savefig('rf_5trees.png')
-###### Visualize all the trees ######
+############################################################ Support Vector Machine #########################################################################
+modelName = 'Support Vector Machine'
 
-print(rf.estimators_) # all the individual trees
+# Grid Search
+# parameters = {'kernel':('linear', 'rbf'), 'C':(1,0.25,0.5,0.75),'gamma': (1,2,3,'auto'),'decision_function_shape':('ovo','ovr'),'shrinking':(True,False)}
+# clf = GridSearchCV(svm.SVC(), parameters,cv=5)
+# getModelsBestParameters(clf, 'Support Vector Machine SVM') #SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
 
-getModelsBestParameters(rf, 'Random Forest')
-printMetrics(y_test, y_pred, 'Random Forest')
-pltRocCurve(y_test, y_pred, 'Random Forest')
-
-############################################################ Support Vector Machine #####################################################################################
-
-parameters = {
-    'kernel':('linear', 'rbf'), 
-    'C':(1,0.25,0.5,0.75),
-    'gamma': (1,2,3,'auto'),
-    'decision_function_shape':('ovo','ovr'),
-    'shrinking':(True,False)
-}
-
-clf = GridSearchCV(svm.SVC(), parameters)
+# Create Model
+start_SupportVectorMachine = time.time()
+clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
+end_SupportVectorMachine = time.time()
 
-getModelsBestParameters(clf, 'Support Vector Machine SVM')
-printMetrics(y_test, y_pred, 'Support Vector Machine SVM')
-pltRocCurve(y_test, y_pred, 'Support Vector Machine SVM')
+# Print Metrics
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOff(normalized_df.values,y,clf,10,modelName)
+measureTradeOffAlterNative(normalized_df.values,y,clf,10,modelName)
 
-########################################################################## MLPClassifier #############################################################################
+################################################################## MLPClassifier ###################################################################
+modelName = 'MLPClassifier'
 
-clfANN = MLPClassifier(solver='sgd', activation='logistic',
-                       batch_size=10,
-                       hidden_layer_sizes=(2,2), random_state=1, max_iter=1000, verbose=True)
+# Grid Search
+# mlp = MLPClassifier(max_iter=100)
+# parameter_space = {'hidden_layer_sizes': [(50,50,50), (50,100,50), (100,)],'activation': ['tanh', 'relu'],'solver': ['sgd', 'adam'],'alpha': [0.0001, 0.05],'learning_rate': ['constant','adaptive'],}
+# clfANN = GridSearchCV(mlp, parameter_space, n_jobs=-1, cv=3)
+# getModelsBestParameters(clfANN, 'MLPClassifier') # MLPClassifier(activation='tanh', alpha=0.05, hidden_layer_sizes=(50, 50, 50),learning_rate='adaptive', max_iter=100)
 
-#train the classifiers
+# Create Model
+start_MPLClassifier = time.time()
+clfANN =MLPClassifier(activation='tanh', alpha=0.05, hidden_layer_sizes=(2, 2, 2),learning_rate='adaptive', max_iter=100)
 clfANN.fit(X_train, y_train)                         
+y_pred=clfANN.predict(X_test)
+end_MPLClassifier = time.time()
 
-#test the trained model on the test set
-y_test_pred_ANN=clfANN.predict(X_test)
+print ('NearNeigh: Macro Precision, recall, f1-score',precision_recall_fscore_support(y_test, y_pred, average='macro'))
+print ('NearNeigh: Micro Precision, recall, f1-score', precision_recall_fscore_support(y_test, y_pred, average='micro'))
+printMetrics(y_test, y_pred, modelName)
+pltRocCurve(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+plotConfusionMatrix(y_test, y_pred, modelName)
+measureTradeOff(normalized_df.values,y,clfANN,10,modelName)
+measureTradeOffAlterNative(normalized_df.values,y,clfANN,10,modelName)
 
-confMatrixTestANN=confusion_matrix(y_test, y_test_pred_ANN, labels=None)
+elapsed_time["Gaussian Naive Bayes"].append(round(end_gaussian-start_gaussian,2))
+elapsed_time["Logistic Regression"].append(round(end_logisticRegression-start_logisticRegression,2))
+elapsed_time["KNeighbors"].append(round(end_KNeighbors-start_KNeighbors,2))
+elapsed_time["Random Forest"].append(round(end_RandomForest-start_RandomForest,2))
+elapsed_time["Decision Tree"].append(round(end_decisionTree-start_decisionTree,2))
+elapsed_time["Support Vector Machine"].append(round(end_SupportVectorMachine-start_SupportVectorMachine,2))
+elapsed_time["MLPClassifier"].append(round(end_MPLClassifier-start_MPLClassifier,2))
 
-getModelsBestParameters(clfANN, 'MLPClassifier')
-print ('Conf matrix Neural Net')
-print (confMatrixTestANN)
-
-# Measures of performance: Precision, Recall, F1
-print ('NearNeigh: Macro Precision, recall, f1-score')
-print ( precision_recall_fscore_support(y_test, y_test_pred_ANN, average='macro'))
-print ('NearNeigh: Micro Precision, recall, f1-score')
-print (precision_recall_fscore_support(y_test, y_test_pred_ANN, average='micro'))
-print ('\n')
-
-y = np.array(y)
-kf = KFold(n_splits=10)
-list_training_error = []
-list_testing_error = []
-for train_index, test_index in kf.split(X):
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
-    model = MLPClassifier(solver='sgd', activation='logistic',
-                       batch_size=10,
-                       hidden_layer_sizes=(5,5), random_state=1, max_iter=100, verbose=True)
-    model.fit(X_train, y_train)
-    y_train_data_pred = model.predict(X_train)
-    y_test_data_pred = model.predict(X_test)
-    fold_training_error = mean_absolute_error(y_train, y_train_data_pred) 
-    fold_testing_error = mean_absolute_error(y_test, y_test_data_pred)
-    list_training_error.append(fold_training_error)
-    list_testing_error.append(fold_testing_error)
-
-plt.subplot(1,2,1)
-plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_training_error).ravel(), 'o-')
-plt.xlabel('number of fold')
-plt.ylabel('training error')
-plt.title('Training error across folds')
-plt.tight_layout()
-plt.subplot(1,2,2)
-plt.plot(range(1, kf.get_n_splits() + 1), np.array(list_testing_error).ravel(), 'o-')
-plt.xlabel('number of fold')
-plt.ylabel('testing error')
-plt.title('Testing error across folds')
-plt.tight_layout()
-plt.show()
+for x in elapsed_time:
+  print('Computation Time of ' + x + ':', elapsed_time[x])
+########################################################################## END ##########################################################################
