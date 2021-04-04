@@ -1,25 +1,13 @@
 ########################################################################## START ##########################################################################
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.decomposition import PCA
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import mean_absolute_error, confusion_matrix, precision_recall_fscore_support, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc
-from sklearn.preprocessing import StandardScaler
-from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, cross_val_score,KFold,validation_curve, GridSearchCV
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import mean_absolute_error, confusion_matrix, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc, precision_recall_fscore_support
+from sklearn.model_selection import KFold
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn import svm
-from sklearn import tree
 import matplotlib.pyplot as plt
 from seaborn import countplot
 import seaborn as sns
 import numpy as np
 import pandas as pd
-import time
-import os
 
 def plotConfusionMatrix(y_test, y_pred , model):
    cm = confusion_matrix(y_test, y_pred)
@@ -45,12 +33,11 @@ def displayBoxPlots(df, columsToBeDisplayed):
    plt.show()
 
 def printMetrics(y_test, y_pred, algoName):
-   print('\n')
-   print(algoName + ' Accuracy: ',           round(accuracy_score(y_test, y_pred), 2), '%.')
+   print(algoName + ' Accuracy: ',           round(accuracy_score(y_test, y_pred), 2), '%')
+   print(algoName + ' Recall: ',             round(recall_score(y_test, y_pred), 2), '%')
+   print(algoName + ' Precesion: ',          round(precision_score(y_test, y_pred), 2), '%')
+   print(algoName + ' F-measure: ',          round(f1_score(y_test, y_pred), 2), '%')
    print(algoName + ' Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
-   print(algoName + ' Recall: ',             round(recall_score(y_test, y_pred), 2), '%.')
-   print(algoName + ' Precesion: ',          round(precision_score(y_test, y_pred), 2), '%.')
-   print(algoName + ' F-measure: ',          round(f1_score(y_test, y_pred), 2), '%.')
 
 def pltRocCurve(y_test, y_pred, algoName):
    # ROC-AUC curve
@@ -100,6 +87,16 @@ def excractFeatureImportance(X,y):
 def getModelsBestParameters(model, algoName):
    print(algoName + ' Best Parameters : ', model.best_estimator_)
 
+def printMicroMacroMetrics(y_test, y_pred, modelName):
+   print (modelName + ' : Macro Precision, recall, f1-score', precision_recall_fscore_support(y_test, y_pred, average='macro'))
+   print (modelName + ' : Micro Precision, recall, f1-score', precision_recall_fscore_support(y_test, y_pred, average='micro'))
+
+def composeMetrics(y_test, y_pred, modelName):
+   printMicroMacroMetrics(y_test, y_pred, modelName)
+   printMetrics(y_test, y_pred, modelName)
+   pltRocCurve(y_test, y_pred, modelName)
+   plotConfusionMatrix(y_test, y_pred, modelName)
+
 def measureTradeOff(X,y,model,n_splits,modelName):
    y = np.array(y)
    kf = KFold(n_splits=n_splits)
@@ -129,6 +126,7 @@ def measureTradeOff(X,y,model,n_splits,modelName):
    plt.title(modelName + ': Testing error across folds')
    plt.tight_layout()
    plt.show()
+
 
 def measureTradeOffAlterNative(X,y,model,n_splits,modelName):
    y = np.array(y)

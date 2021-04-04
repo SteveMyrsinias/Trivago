@@ -2,16 +2,13 @@
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.decomposition import PCA
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import mean_absolute_error, confusion_matrix, precision_recall_fscore_support, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, cross_val_score,KFold,validation_curve, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
-from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.pipeline import Pipeline
 from sklearn import svm,tree
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -88,9 +85,9 @@ normalized_df = pd.get_dummies(normalized_df, columns=['platform'], prefix=['pla
 print('After Converting categorical variable into dummy/indicator variables: ', normalized_df.shape) 
 
 # apply SelectKBest class to extract top 10 best features
-excractFeatureImportance(normalized_df.iloc[:, :-1],y)
+excractFeatureImportance(normalized_df.iloc[:, :],y)
 
-# Drop these feature 
+# Drop these features were does'n have any importance for the prediction
 normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='country_Type_is')))]
 normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='city_Type_is')))]
 normalized_df = normalized_df[normalized_df.columns.drop(list(normalized_df.filter(regex='platform_Type_is')))]
@@ -129,9 +126,9 @@ y_pred = gaussian.predict(X_test)
 end_gaussian = time.time()
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,gaussian,10,modelName)
 measureTradeOff(normalized_df.values,y,gaussian,10,modelName)
 
@@ -156,9 +153,9 @@ end_logisticRegression = time.time()
 # https://stackoverflow.com/questions/61184906/difference-between-predict-vs-predict-proba-in-scikit-learn
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,logreg,10,modelName)
 measureTradeOff(normalized_df.values,y,logreg,10,modelName)
 
@@ -178,9 +175,9 @@ y_pred = decisionTree.predict(X_test)
 end_decisionTree = time.time()
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,decisionTree,10,modelName)
 measureTradeOff(normalized_df.values,y,decisionTree,10,modelName)
 
@@ -200,9 +197,9 @@ y_pred = kneighbors.predict(X_test)
 end_KNeighbors = time.time()
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,kneighbors,10,modelName)
 measureTradeOff(normalized_df.values,y,kneighbors,10,modelName)
 
@@ -222,9 +219,9 @@ y_pred = rf.predict(X_test)
 end_RandomForest = time.time()
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,rf,10,modelName)
 measureTradeOff(normalized_df.values,y,rf,10,modelName)
 
@@ -244,11 +241,12 @@ y_pred = clf.predict(X_test)
 end_SupportVectorMachine = time.time()
 
 # Print Metrics
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
-measureTradeOff(normalized_df.values,y,clf,10,modelName)
-measureTradeOffAlterNative(normalized_df.values,y,clf,10,modelName)
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
+# Comment below due to freeze of code
+# measureTradeOffAlterNative(normalized_df.values,y,clf,3,modelName)
+# measureTradeOff(normalized_df.values,y,clf,3,modelName)
 
 ################################################################## MLPClassifier ###################################################################
 modelName = 'MLPClassifier'
@@ -266,14 +264,14 @@ clfANN.fit(X_train, y_train)
 y_pred=clfANN.predict(X_test)
 end_MPLClassifier = time.time()
 
-print ('NearNeigh: Macro Precision, recall, f1-score',precision_recall_fscore_support(y_test, y_pred, average='macro'))
-print ('NearNeigh: Micro Precision, recall, f1-score', precision_recall_fscore_support(y_test, y_pred, average='micro'))
-printMetrics(y_test, y_pred, modelName)
-pltRocCurve(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
-plotConfusionMatrix(y_test, y_pred, modelName)
-measureTradeOff(normalized_df.values,y,clfANN,10,modelName)
+# Print Metrics
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
 measureTradeOffAlterNative(normalized_df.values,y,clfANN,10,modelName)
+measureTradeOff(normalized_df.values,y,clfANN,10,modelName)
+
+############################################ elapsed time per model ###################################################################
 
 elapsed_time["Gaussian Naive Bayes"].append(round(end_gaussian-start_gaussian,2))
 elapsed_time["Logistic Regression"].append(round(end_logisticRegression-start_logisticRegression,2))

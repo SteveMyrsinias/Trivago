@@ -118,6 +118,8 @@ We use SelectKBest in order to select those features that they have the stronges
 | Recall        | 1.0 %     
 | Precesion     | 1.0 %     
 | F-measure     | 1.0 %      
+| Macro Precision, recall, f1-score | 1.0, 1.0, 1.0
+| Micro Precision, recall, f1-score | 1.0, 1.0, 1.0
 
 ### 3.Decision Tree
 
@@ -132,6 +134,8 @@ We use SelectKBest in order to select those features that they have the stronges
 | Recall        | 0.99 %     
 | Precesion     | 1.0 %     
 | F-measure     | 0.99 %      
+| Macro Precision, recall, f1-score | 0.9932786056746217, 0.9933514195357824, 0.9933110113589807
+| Micro Precision, recall, f1-score | 0.9933132731527917, 0.9933132731527917, 0.9933132731527917
 
 ### 5.KNeighbors
 
@@ -146,6 +150,8 @@ We use SelectKBest in order to select those features that they have the stronges
 | Recall        | 0.99 %     
 | Precesion     | 1.0 %     
 | F-measure     | 0.99 %      
+| Macro Precision, recall, f1-score | 0.987608360891175, 0.9878085874422411, 0.987627956634628
+| Micro Precision, recall, f1-score | 0.9876295553326646, 0.9876295553326646, 0.9876295553326646
 
 ### 5.Random Forest
 
@@ -160,6 +166,8 @@ We use SelectKBest in order to select those features that they have the stronges
 | Recall        | 0.99 %     
 | Precesion     | 1.0 %     
 | F-measure     | 0.99 %      
+| Macro Precision, recall, f1-score | 0.9946037744286929, 0.994716607249093, 0.994649062780931
+| Micro Precision, recall, f1-score | 0.9946506185222334, 0.9946506185222334, 0.9946506185222334
 
 ### 6.Support Vector Machine
 
@@ -172,16 +180,37 @@ We use SelectKBest in order to select those features that they have the stronges
 | Accuracy      | 1.0 % 
 | Recall        | 1.0 %     
 | Precesion     | 1.0 %     
-| F-measure     | 1.0 %      
+| F-measure     | 1.0 %     
+| Macro Precision, recall, f1-score | 1.0, 1.0, 1.0
+| Micro Precision, recall, f1-score | 1.0, 1.0, 1.0   
 
 ### 7.MLPClassifier
 
+![](images/mlpClassifierConfusionMatrix.png)
+![](images/mlpClassifierRocCurve.png)
+![](images/mlpClassifierTradeOff1.png)
+![](images/mlpClassifierTradeOff2.png)
+
 | Evaluation    | MLPClassifier          
 | ------------- |:-------------:
-| Accuracy      | - 
-| Recall        | -     
-| Precesion     | -     
-| F-measure     | -      
+| Accuracy      | 1.0 % 
+| Recall        | 1.0 %     
+| Precesion     | 1.0 %     
+| F-measure     | 1.0 %      
+| Macro Precision, recall, f1-score | 0.9986494211229732, 0.998675741079536, 0.9986621340549728
+| Micro Precision, recall, f1-score | 0.9986626546305584, 0.9986626546305584, 0.9986626546305584  
+
+### Computation Time
+
+| Model | Time (in seconds) |
+| --- | --- |
+| Gaussian Naive Bayes | 0.3 |
+| Logistic Regression: | 0.06 |
+| KNeighbors: | 0.13 |
+| Random Forest | 0.78 |
+| Decision Tree | 0.06 |
+| Support Vector Machine | 0.24 |
+| MLPClassifier: | 1.42 |
 
 ### Feature Work 
 Analysis mote the current_filters column
