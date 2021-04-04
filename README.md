@@ -42,19 +42,15 @@ The generated csv from generateCsv.py (see on data folder export_dataframe.csv) 
 19. search for item
 20. target
 
-Gradient Descent
-Correlation matrix
-Variance Inflation Factor (VIF) is fo regression
-https://medium.com/analytics-vidhya/what-is-multicollinearity-and-how-to-remove-it-413c419de2f
-TODO: # Descriptive statistics for each column
-features.describe()
-feature_importances_
-#TODO:  logistic regression, random forest regressor
-
 ### Data Description
-Initial dataset: (58529, 20)
-Print missing values:  0
+
+Initial dataset: (1048575, 12)
 Generated dataset: (58529, 20)
+Print missing values:  0
+
+### Correlation HeatMap
+
+![](images/correlationHeatMap.png)
 
 ### Data Preprocessing
 
@@ -65,17 +61,19 @@ In generated dataset the target values are 4985 rows for class:0 (not clickout) 
 
 ![](images/initialDistOfTargetClass.png)
 
-As we can obser the dataset is imbalance, therefor we should delete some values from the majority class in order to balanche the data set
+As we can obser that the dataset is imbalance, therefor we should delete some values from the majority class in order to balance the data set.
 
 ![](images/generatedDistOfTargetClass.png)
 
-The final balanche dataset consist of 9970 observers.
+The final balanced dataset consist of 9970 observers.
 
-![](images/correlationHeatMap.png)
 
-### Detect Missing Data
 
-### Detect Outlier
+### Detect Outliers
+
+![](images/boxPlot1.png)
+![](images/boxPlot2.png)
+![](images/boxPlot3.png)
 
 ### One Hot encoding
 In order to convert the categorical variables as binary vectors we use the one hot encoding.
@@ -86,6 +84,8 @@ This ensures that the random numbers are generated in the same order we use the 
 
 #### Feature Importance
 We use SelectKBest in order to select those features that they have the strongest relationship with the output variable.
+
+![](images/featureImportances.png)
 
 ### Feature Scaling
 

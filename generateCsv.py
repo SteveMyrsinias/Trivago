@@ -14,7 +14,7 @@ missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and
 my_path = os.path.abspath(os.path.dirname(__file__)) # get the current path
 df_train=pd.read_csv(r''+my_path+'\\data\\train.csv', sep=',', na_values=missing_values) #, nrows=100000
 itemMetaData=pd.read_csv(r''+my_path+'\\data\\item_metadata.csv', sep=',', na_values=missing_values)
-
+print('initial shape: ',df_train.shape) # (1048575, 12)
 groupedByUserId  = df_train.groupby(['user_id']) # group rows per user_id
 
 for index,group in groupedByUserId:
