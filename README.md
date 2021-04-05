@@ -95,6 +95,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/gaussianNaiveBayesTradeOff1.png)
 ![](images/gaussianNaiveBayesTradeOff2.png)
 
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1448 | 17   |
+| 34   | 1492 |
+
+AUC: 0.98
+
 | Evaluation    | Gaussian Naive Bayes           
 | ------------- |:-------------:
 | Accuracy      | 0.98 %
@@ -110,6 +117,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/logisticRegressionRocCurve.png)
 ![](images/logisticRegressionTradeOff1.png)
 ![](images/logisticRegressionTradeOff2.png)
+
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1465 | 0    |
+| 0    | 1526 |
+
+AUC: 1.00
 
 | Evaluation    | Logistic Regression           
 | ------------- |:-------------:
@@ -127,6 +141,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/decesionTreeTradeOff1.png)
 ![](images/decesionTreeTradeOff2.png)
 
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1458 | 7    |
+| 14   | 1512 |
+
+AUC: 0.99
+
 | Evaluation    | Decision Tree           
 | ------------- |:-------------:
 | Accuracy      | 0.99 % 
@@ -142,6 +163,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/kneighborsRocCurve.png)
 ![](images/kneighborsTradeOff1.png)
 ![](images/kneighborsTradeOff2.png)
+
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1460 | 5    |
+| 32   | 1494 |
+
+AUC: 0.99
 
 | Evaluation    | KNeighbors           
 | ------------- |:-------------:
@@ -159,6 +187,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/randomForestTradeOff1.png)
 ![](images/randomForestTradeOff2.png)
 
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1462 | 3    |
+| 12   | 1514 |
+
+AUC: 1.00
+
 | Evaluation    | Random Forest          
 | ------------- |:-------------:
 | Accuracy      | 0.99 % 
@@ -173,6 +208,12 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/supportVectorMachineConfusionMatrix.png)
 ![](images/supportVectorMachineRocCurve.png)
 
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1465 | 0    |
+| 0    | 1526 |
+
+AUC: 1.00
 
 | Evaluation    | Support Vector Machine          
 | ------------- |:-------------:
@@ -189,6 +230,13 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/mlpClassifierRocCurve.png)
 ![](images/mlpClassifierTradeOff1.png)
 ![](images/mlpClassifierTradeOff2.png)
+
+| Confusion Matrix:|          
+| ---- |:-----:
+| 1464 | 1    |
+| 2   | 1524 |
+
+AUC: 1.00
 
 | Evaluation    | MLPClassifier          
 | ------------- |:-------------:

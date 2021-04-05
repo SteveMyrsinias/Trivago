@@ -84,7 +84,7 @@ normalized_df = pd.get_dummies(normalized_df, columns=['platform'], prefix=['pla
 
 print('After Converting categorical variable into dummy/indicator variables: ', normalized_df.shape) 
 
-# apply SelectKBest class to extract top 10 best features
+# apply SelectKBest class to extract top 40 best features
 excractFeatureImportance(normalized_df.iloc[:, :],y)
 
 # Drop these features were does'n have any importance for the prediction
