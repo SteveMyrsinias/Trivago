@@ -225,29 +225,6 @@ composeMetrics(y_test, y_pred, modelName)
 measureTradeOffAlterNative(normalized_df.values,y,rf,10,modelName)
 measureTradeOff(normalized_df.values,y,rf,10,modelName)
 
-############################################################ Support Vector Machine #########################################################################
-modelName = 'Support Vector Machine'
-
-# Grid Search
-# parameters = {'kernel':('linear', 'rbf'), 'C':(1,0.25,0.5,0.75),'gamma': (1,2,3,'auto'),'decision_function_shape':('ovo','ovr'),'shrinking':(True,False)}
-# clf = GridSearchCV(svm.SVC(), parameters,cv=5)
-# getModelsBestParameters(clf, 'Support Vector Machine SVM') #SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
-
-# Create Model
-start_SupportVectorMachine = time.time()
-clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
-end_SupportVectorMachine = time.time()
-
-# Print Metrics
-composeMetrics(y_test, y_pred, modelName)
-
-# Print Trade off
-# Comment below due to freeze of code
-# measureTradeOffAlterNative(normalized_df.values,y,clf,3,modelName)
-# measureTradeOff(normalized_df.values,y,clf,3,modelName)
-
 ################################################################## MLPClassifier ###################################################################
 modelName = 'MLPClassifier'
 
@@ -271,7 +248,30 @@ composeMetrics(y_test, y_pred, modelName)
 measureTradeOffAlterNative(normalized_df.values,y,clfANN,10,modelName)
 measureTradeOff(normalized_df.values,y,clfANN,10,modelName)
 
-############################################ elapsed time per model ###################################################################
+############################################################ Support Vector Machine #########################################################################
+modelName = 'Support Vector Machine'
+
+# Grid Search
+# parameters = {'kernel':('linear', 'rbf'), 'C':(1,0.25,0.5,0.75),'gamma': (1,2,3,'auto'),'decision_function_shape':('ovo','ovr'),'shrinking':(True,False)}
+# clf = GridSearchCV(svm.SVC(), parameters,cv=5)
+# getModelsBestParameters(clf, 'Support Vector Machine SVM') #SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
+
+# Create Model
+start_SupportVectorMachine = time.time()
+clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
+clf.fit(X_train, y_train)
+y_pred = clf.predict(X_test)
+end_SupportVectorMachine = time.time()
+
+# Print Metrics
+composeMetrics(y_test, y_pred, modelName)
+
+# Print Trade off
+# Comment below due to freeze of code
+# measureTradeOffAlterNative(normalized_df.values,y,clf,10,modelName)
+# measureTradeOff(normalized_df.values,y,clf,10,modelName)
+
+############################################ Elapsed time per model ###################################################################
 
 elapsed_time["Gaussian Naive Bayes"].append(round(end_gaussian-start_gaussian,2))
 elapsed_time["Logistic Regression"].append(round(end_logisticRegression-start_logisticRegression,2))
