@@ -12,12 +12,12 @@ We group the rows from the original dataset by user id, on top of that we comput
 4.  The current city of the search context.
 5.  The current country of the search context.
 6.  The country platform that was used for the search, e.g. trivago.de (DE) or trivago.com (US)
-7.  The total count of filters tha user proceed in a session.
+7.  The total count of filters that user proceed in a session.
 8.  The sum of the impression was shown when the user click-out.
 9.  The median of the hotel's prices that displayed in user.
 10. The sum of all the facilities that hotels are offering .
 11. Create a column for each type of action and count the total action of them.
-12. Create a target column to idicate if the user click out or not.
+12. Create a target column to indicate if the user click out or not.
 
 The generated csv from generateCsv.py (see on data folder export_dataframe.csv) consist of the following features:
 
@@ -48,12 +48,7 @@ Initial dataset: (1048575, 12)
 Generated dataset: (58529, 20)
 Print missing values:  0
 
-### Correlation HeatMap
-
-![](images/correlationHeatMap.png)
-
 ### Data Preprocessing
-
 
 #### Detect Imbalanced Classes
 
@@ -61,13 +56,15 @@ In generated dataset the target values are 4985 rows for class:0 (not clickout) 
 
 ![](images/initialDistOfTargetClass.png)
 
-As we can obser that the dataset is imbalance, therefor we should delete some values from the majority class in order to balance the data set.
+As we can observe that the dataset is imbalance, therefor we should delete some values from the majority class in order to balance the data set.
 
 ![](images/generatedDistOfTargetClass.png)
 
 The final balanced dataset consist of 9970 observers.
 
+### Correlation HeatMap
 
+![](images/correlationHeatMap.png)
 
 ### Detect Outliers
 
@@ -91,19 +88,21 @@ We use SelectKBest in order to select those features that they have the stronges
 
 ## Data Visualization
 
-### 1.Gaussian Mixture
+### 1.Gaussian Naive Bayes 
 
 ![](images/gaussianNaiveBayesConfusionMatrix.png)
 ![](images/GaussianNaiveBayesRocCurve.png)
 ![](images/gaussianNaiveBayesTradeOff1.png)
 ![](images/gaussianNaiveBayesTradeOff2.png)
 
-| Evaluation    | Gaussian Mixture          
+| Evaluation    | Gaussian Naive Bayes           
 | ------------- |:-------------:
 | Accuracy      | 0.98 %
 | Recall        | 0.98 %     
 | Precesion     | 0.99 %     
 | F-measure     | 0.98 %      
+| Macro Precision, recall, f1-score | 0.9828961453948375, 0.983057716307552, 0.9829451557415494
+| Micro Precision, recall, f1-score | 0.9829488465396189, 0.9829488465396189, 0.9829488465396189
 
 ### 2.Logistic Regression
 
