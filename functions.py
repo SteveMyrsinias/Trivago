@@ -35,7 +35,7 @@ def displayBoxPlots(df, columsToBeDisplayed):
 def printMetrics(y_test, y_pred, algoName):
    print(algoName + ' Accuracy: ',           round(accuracy_score(y_test, y_pred), 2), '%')
    print(algoName + ' Recall: ',             round(recall_score(y_test, y_pred), 2), '%')
-   print(algoName + ' Precesion: ',          round(precision_score(y_test, y_pred), 2), '%')
+   print(algoName + ' Precision: ',          round(precision_score(y_test, y_pred), 2), '%')
    print(algoName + ' F-measure: ',          round(f1_score(y_test, y_pred), 2), '%')
    print(algoName + ' Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
 
@@ -83,6 +83,9 @@ def excractFeatureImportance(X,y):
    feat_importances.nlargest(40).plot(kind='barh')
    plt.title('Feature Importances')
    plt.show()
+
+def minMax(x):
+    return pd.Series(index=['min','max'],data=[x.min(),x.max()])
 
 def getModelsBestParameters(model, algoName):
    print(algoName + ' Best Parameters : ', model.best_estimator_)

@@ -42,6 +42,8 @@ The generated csv from generateCsv.py (see on data folder export_dataframe.csv) 
 19. search for item
 20. target
 
+![](images/generatedCsv.JPG)
+
 ### Data Description
 
 Initial dataset: (1048575, 12)
@@ -66,6 +68,9 @@ The final balanced dataset consist of 9970 observers.
 
 ![](images/correlationHeatMap.png)
 
+As we can observe from the previous image. We are able to drop the column interaction the image since is high correlated with steps.
+Another observation is that that feature impressions is high correlated with the target feature, and that can help as for the predictions. 
+
 ### Detect Outliers
 
 ![](images/boxPlot1.png)
@@ -73,14 +78,31 @@ The final balanced dataset consist of 9970 observers.
 ![](images/boxPlot3.png)
 
 ### One Hot encoding
-In order to convert the categorical variables as binary vectors we use the one hot encoding.
-TODO: add the categorical values
 
-### Splitting the data-set into Training and Test Set
-This ensures that the random numbers are generated in the same order we use the random_state.
+In order to convert the categorical variables as binary vectors we use the one hot encoding.
+After converting the categorical variables as binary, created a problem since some columns has many different values.
+
+| Column    | 
+| ----------|:-------------:
+| Country   | 135
+| City      | 3387     
+| Platform  | 54
+
+### Splitting the dataset into Training and Test Set
+
+We split the data 70-30, that means 70% for train and 30% for testing.
+To guarantee that the output of every split will be the same we use random_state
 
 #### Feature Importance
-We use SelectKBest in order to select those features that they have the strongest relationship with the output variable.
+
+We use SelectKBest in order to select those features that they contribute most to the target variable.
+
+#### Advantages:
+1. Reduces Overfitting
+2. Improves Accuracy
+3. Reduces Training Time
+
+https://www.kaggle.com/jepsds/feature-selection-using-selectkbest?utm_campaign=News&utm_medium=Community&utm_source=DataCamp.com
 
 ![](images/featureImportances.png)
 
@@ -95,7 +117,7 @@ We use SelectKBest in order to select those features that they have the stronges
 ![](images/gaussianNaiveBayesTradeOff1.png)
 ![](images/gaussianNaiveBayesTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1448 | 17   |
 | 34   | 1492 |
@@ -106,7 +128,7 @@ AUC: 0.98
 | ------------- |:-------------:
 | Accuracy      | 0.98 %
 | Recall        | 0.98 %     
-| Precesion     | 0.99 %     
+| Precision     | 0.99 %     
 | F-measure     | 0.98 %      
 | Macro Precision, recall, f1-score | 0.9828961453948375, 0.983057716307552, 0.9829451557415494
 | Micro Precision, recall, f1-score | 0.9829488465396189, 0.9829488465396189, 0.9829488465396189
@@ -115,10 +137,13 @@ AUC: 0.98
 
 ![](images/logisticRegressionConfusionMatrix.png)
 ![](images/logisticRegressionRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
 ![](images/logisticRegressionTradeOff1.png)
 ![](images/logisticRegressionTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1465 | 0    |
 | 0    | 1526 |
@@ -129,7 +154,7 @@ AUC: 1.00
 | ------------- |:-------------:
 | Accuracy      | 1.0 % 
 | Recall        | 1.0 %     
-| Precesion     | 1.0 %     
+| Precision     | 1.0 %     
 | F-measure     | 1.0 %      
 | Macro Precision, recall, f1-score | 1.0, 1.0, 1.0
 | Micro Precision, recall, f1-score | 1.0, 1.0, 1.0
@@ -138,13 +163,16 @@ AUC: 1.00
 
 ![](images/decisionTreeConfusionMatrix.png)
 ![](images/decisionTreeRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
 ![](images/decesionTreeTradeOff1.png)
 ![](images/decesionTreeTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :       
 | ---- |:-----:
-| 1458 | 7    |
-| 14   | 1512 |
+| 1458 - 7    |
+| 14   - 1512 |
 
 AUC: 0.99
 
@@ -152,7 +180,7 @@ AUC: 0.99
 | ------------- |:-------------:
 | Accuracy      | 0.99 % 
 | Recall        | 0.99 %     
-| Precesion     | 1.0 %     
+| Precision     | 1.0 %     
 | F-measure     | 0.99 %      
 | Macro Precision, recall, f1-score | 0.9932786056746217, 0.9933514195357824, 0.9933110113589807
 | Micro Precision, recall, f1-score | 0.9933132731527917, 0.9933132731527917, 0.9933132731527917
@@ -161,10 +189,13 @@ AUC: 0.99
 
 ![](images/kneighborsConfusionMatrix.png)
 ![](images/kneighborsRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
 ![](images/kneighborsTradeOff1.png)
 ![](images/kneighborsTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1460 | 5    |
 | 32   | 1494 |
@@ -175,7 +206,7 @@ AUC: 0.99
 | ------------- |:-------------:
 | Accuracy      | 0.99 % 
 | Recall        | 0.99 %     
-| Precesion     | 1.0 %     
+| Precision     | 1.0 %     
 | F-measure     | 0.99 %      
 | Macro Precision, recall, f1-score | 0.987608360891175, 0.9878085874422411, 0.987627956634628
 | Micro Precision, recall, f1-score | 0.9876295553326646, 0.9876295553326646, 0.9876295553326646
@@ -184,10 +215,13 @@ AUC: 0.99
 
 ![](images/randomForestConfusionMatrix.png)
 ![](images/randomForestRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
 ![](images/randomForestTradeOff1.png)
 ![](images/randomForestTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1462 | 3    |
 | 12   | 1514 |
@@ -198,17 +232,18 @@ AUC: 1.00
 | ------------- |:-------------:
 | Accuracy      | 0.99 % 
 | Recall        | 0.99 %     
-| Precesion     | 1.0 %     
+| Precision     | 1.0 %     
 | F-measure     | 0.99 %      
 | Macro Precision, recall, f1-score | 0.9946037744286929, 0.994716607249093, 0.994649062780931
 | Micro Precision, recall, f1-score | 0.9946506185222334, 0.9946506185222334, 0.9946506185222334
 
 ### 6.Support Vector Machine
 
-![](images/supportVectorMachineConfusionMatrix.png)
-![](images/supportVectorMachineRocCurve.png)
+Linear
+![](images/supportVectorMachineLinearConfusionMatrix.png)
+![](images/supportVectorMachineLinearRocCurve.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1465 | 0    |
 | 0    | 1526 |
@@ -219,19 +254,47 @@ AUC: 1.00
 | ------------- |:-------------:
 | Accuracy      | 1.0 % 
 | Recall        | 1.0 %     
-| Precesion     | 1.0 %     
+| Precision     | 1.0 %     
 | F-measure     | 1.0 %     
 | Macro Precision, recall, f1-score | 1.0, 1.0, 1.0
 | Micro Precision, recall, f1-score | 1.0, 1.0, 1.0   
+
+Non-Linear
+![](images/supportVectorMachineNonLinearConfusionMatrix.png)
+![](images/supportVectorMachineNonLinearRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
+![](images/supportVectorMachineNonLinearTradeOff1.png)
+![](images/supportVectorMachineNonLinearTradeOff2.png)
+
+| Confusion Matrix| :          
+| ---- |:-----:
+| 1371 | 94   |
+| 6    | 1520 |
+
+AUC: 0.97
+
+| Evaluation    | Support Vector Machine          
+| ------------- |:-------------:
+| Accuracy      | 0.97 % 
+| Recall        | 1.0 %     
+| Precision     | 0.94 %     
+| F-measure     | 0.97 %     
+| Macro Precision, recall, f1-score | 0.968, 0.965, 0.966
+| Micro Precision, recall, f1-score | 0.966, 0.966, 0.966   
 
 ### 7.MLPClassifier
 
 ![](images/mlpClassifierConfusionMatrix.png)
 ![](images/mlpClassifierRocCurve.png)
+
+#### Bias–Variance Tradeoff
+
 ![](images/mlpClassifierTradeOff1.png)
 ![](images/mlpClassifierTradeOff2.png)
 
-| Confusion Matrix:|          
+| Confusion Matrix| :          
 | ---- |:-----:
 | 1464 | 1    |
 | 2   | 1524 |
@@ -242,7 +305,7 @@ AUC: 1.00
 | ------------- |:-------------:
 | Accuracy      | 1.0 % 
 | Recall        | 1.0 %     
-| Precesion     | 1.0 %     
+| Precision      | 1.0 %     
 | F-measure     | 1.0 %      
 | Macro Precision, recall, f1-score | 0.9986494211229732, 0.998675741079536, 0.9986621340549728
 | Micro Precision, recall, f1-score | 0.9986626546305584, 0.9986626546305584, 0.9986626546305584  

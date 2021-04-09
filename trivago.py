@@ -20,15 +20,15 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
+pd.set_option('display.width', None)
 elapsed_time = {"Gaussian Naive Bayes": [],"Logistic Regression": [] ,"KNeighbors": [],"Random Forest": [],"Decision Tree": [],"Support Vector Machine": [] ,"MLPClassifier": []} # Copute the computational time of every algorith
 missing_values = ["n/a", "na", "--", "?"] # pandas only detect NaN, NA,  n/a and values and empty shell
 my_path = os.path.abspath(os.path.dirname(__file__))
 generated_df=pd.read_csv(r''+my_path+'\\data\\export_dataframe.csv',  sep=',', na_values=missing_values)
 
 print('initial shape: ',generated_df.shape) # (58529, 16)
-
-# Print missing values
-print('Print missing values: ', generated_df.isnull().values.sum())
+print('Description\n ',generated_df.describe()) # (58529, 16)
+print('Missing values: ', generated_df.isnull().values.sum())
 
 #### Start - Check for imbalanced dataset ####
 print(generated_df.groupby(['target']).size()) # print the sum of every class,  0:4985, 1:53544
@@ -82,6 +82,10 @@ normalized_df = pd.get_dummies(normalized_df, columns=['city'],     prefix=['cit
 normalized_df = pd.get_dummies(normalized_df, columns=['country'],  prefix=['country_Type_is']    )
 normalized_df = pd.get_dummies(normalized_df, columns=['platform'], prefix=['platform_Type_is']   )
 
+print('country_Type_is: ', len(list(normalized_df.filter(regex='country_Type_is'))))
+print('city_Type_is: ', len(list(normalized_df.filter(regex='city_Type_is'))))
+print('platform_Type_is: ', len(list(normalized_df.filter(regex='platform_Type_is'))))
+
 print('After Converting categorical variable into dummy/indicator variables: ', normalized_df.shape) 
 
 # apply SelectKBest class to extract top 40 best features
@@ -96,12 +100,19 @@ print('After deleting columns : ', normalized_df.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(normalized_df.values,y,test_size=0.3,random_state=109)
 
+
 ############################################################ Scale Data ############################################################################################
+
+print('Min Before Scaling : ', np.min(X_train))
+print('Max Before Scaling : ', np.max(X_train))
 
 scaler = StandardScaler()
 scaler.fit(X_train) # Fit on training set only.
 X_train = scaler.transform(X_train) # Apply transform to both the training set and the test set.
 X_test = scaler.transform(X_test)
+
+print('Min After Scaling : ', np.min(X_train))
+print('Max After Scaling : ', np.max(X_train))
 
 ########################################################################## PCA ##########################################################################
 
@@ -187,7 +198,7 @@ modelName = 'KNeighbors'
 # Grid Search
 # grid_params = {'n_neighbors': [3,5,11,19],'weights': ['uniform','distance'],'metric': ['euclidean', 'manhattan']}
 # kneighbors = GridSearchCV(KNeighborsClassifier(), grid_params, verbose=1, cv=5, n_jobs=1)
-# getModelsBestParameters(kneighbors, 'KNeighbors Classifier')
+# getModelsBestParameters(kneighbors, 'KNeighbors Classifier') # KNeighborsClassifier(metric='euclidean', weights='distance')
 
 # Create Model
 start_KNeighbors = time.time()
@@ -209,7 +220,7 @@ modelName = 'Random Forest'
 # Grid Search
 # param_grid = { 'n_estimators': [200, 700],'max_features': ['auto', 'sqrt', 'log2']}
 # rf = GridSearchCV(estimator=rfc, param_grid=param_grid, cv= 5)
-# getModelsBestParameters(rf, 'Random Forest')
+# getModelsBestParameters(rf, 'Random Forest') # RandomForestClassifier(max_features='log2', n_estimators=200, n_jobs=-1, oob_score=True)
 
 # Create Model
 start_RandomForest = time.time()
@@ -258,7 +269,8 @@ modelName = 'Support Vector Machine'
 
 # Create Model
 start_SupportVectorMachine = time.time()
-clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
+clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='rbf')
+#clf = svm.SVC(C=1, decision_function_shape='ovo', gamma=1, kernel='linear')
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 end_SupportVectorMachine = time.time()
